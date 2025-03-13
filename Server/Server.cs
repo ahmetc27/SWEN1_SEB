@@ -5,16 +5,19 @@ using System.Text;
 using System.Text.Json;
 
 using SEB.Models;
+using SEB.Repository;
 
 namespace SEB.Server
 {
     public class Server
     {
         private readonly TcpListener _listener;
-        private List<User> _users = new List<User>();
-        public Server(int port)
+        //private List<User> _users = new List<User>();
+        private readonly UserRepository _userRepo;
+        public Server(int port, string connectionString)
         {
             _listener = new TcpListener(IPAddress.Any, port);
+            _userRepo = new UserRepository(connectionString);
         }
 
         public void Start()
@@ -99,7 +102,8 @@ namespace SEB.Server
             string responseBody = string.Empty;
             if(path == "/users" && method == "GET")
             {
-                responseBody = JsonSerializer.Serialize(_users);
+                var users = _userRepo.GetAllUsers(); // get users from database
+                responseBody = JsonSerializer.Serialize(users);
             }
             else if(path == "/users" && method == "POST")
             {
@@ -111,8 +115,7 @@ namespace SEB.Server
 
                     if(user != null)
                     {
-                        Console.WriteLine($"Registered user: {user.Username}");
-                        _users.Add(user);
+                        _userRepo.Add(user);
                         responseBody = JsonSerializer.Serialize(user);
                     }
                 }
@@ -125,6 +128,38 @@ namespace SEB.Server
                     writer.WriteLine(responseBody);
                     return;
                 }
+            }
+            else if(path == "/users" && method == "DELETE")
+            {
+                string[] _parts = path.Split('/');
+                if(_parts.Length == 3 && int.TryParse(_parts[2], out int Userid))
+                {
+                    _userRepo.Delete(Userid);
+                    writer.WriteLine("HTTP/1.1 200 OK");
+                    writer.WriteLine();
+                    writer.WriteLine($"User {Username} deleted.");
+                }
+                else
+                {
+                    writer.WriteLine("HTTP/1.1 400 Bad Request");
+                    writer.WriteLine();
+                    writer.WriteLine("Invalid ID.");
+                }
+
+                /*User? user = JsonSerializer.Deserialize<User>(requestBody.ToString());
+                if(user != null && user.Id != null)
+                {
+                    _userRepo.Delete(user);
+                    writer.WriteLine("HTTP/1.1 200 OK");
+                    writer.WriteLine();
+                    writer.WriteLine($"User {user.Username} deleted.");
+                }
+                else
+                {
+                    writer.WriteLine("HTTP/1.1 400 Bad Request");
+                    writer.WriteLine();
+                    writer.WriteLine("Missing/Invalid ID.");
+                }*/
             }
             else
             {
