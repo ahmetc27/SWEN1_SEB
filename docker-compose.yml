@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: seb_postgres
+    environment:
+      POSTGRES_USER: seb_user
+      POSTGRES_PASSWORD: seb_password
+      POSTGRES_DB: seb_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  postgres_data:
