@@ -96,7 +96,7 @@ namespace SEB.Server
             }
 
             // Handle different paths and methods
-            string responseBody;
+            string responseBody = string.Empty;
             if(path == "/users" && method == "GET")
             {
                 responseBody = JsonSerializer.Serialize(_users);
@@ -108,37 +108,27 @@ namespace SEB.Server
                 try
                 {
                     user = JsonSerializer.Deserialize<User>(requestBody.ToString());
+
+                    if(user != null)
+                    {
+                        Console.WriteLine($"Registered user: {user.Username}");
+                        _users.Add(user);
+                        responseBody = JsonSerializer.Serialize(user);
+                    }
                 }
                 catch(JsonException ex)
                 {
                     Console.WriteLine($"JSON Deserialization Error: {ex.Message}");
-                    // Falsche Feldnamen
-                    // Falsche JSON-Syntax
+                    writer.WriteLine("HTTP/1.1 400 Bad Request");
+                    writer.WriteLine();
+                    responseBody = "Failed to register user";
+                    writer.WriteLine(responseBody);
+                    return;
                 }
-
-                if(user != null)
-                {
-                    Console.WriteLine($"Registered user: {user.Username}");
-                    _users.Add(user);
-                    responseBody = JsonSerializer.Serialize(new { message = "User registered", user });
-                    // new because message is new
-                }
-                else
-                {
-                    Console.WriteLine("Failed to register user: request body is invalid.");
-                    responseBody = JsonSerializer.Serialize(new { message = "Invalid request body" });
-                    // Leerzeichen oder gar kein Body
-                    // Leeres JSON {}
-                }
-
             }
             else
             {
-                //responseBody = "404 Not Found";
                 writer.WriteLine("HTTP/1.1 404 Not Found");
-                //writer.WriteLine("Content-Type: text/html");
-                writer.WriteLine(); // End of headers
-                //writer.WriteLine(responseBody);
                 return;
             }
 
