@@ -2,6 +2,9 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
+
+using SEB.Models;
 
 namespace SEB.Server
 {
@@ -88,11 +91,53 @@ namespace SEB.Server
 
             Console.WriteLine($"Body: {requestBody.ToString()}");
 
+            // Handle different paths and methods
+            string responseBody;
+            if(path == "/users" && method == "GET")
+            {
+                responseBody = "<html><body>TEST GET!</body></html>";
+            }
+            else if(path == "/users" && method == "POST")
+            {
+                // Deserialize JSON request body
+                var user = JsonSerializer.Deserialize<User>(requestBody.ToString());
+                /*
+                JsonSerializer.Deserialize<User>(requestBody.ToString()) wandelt in folgendes Objekt um:
+                User user = new User { Username = "Ahmet", Password = "123" };
+                */
+                if(user != null)
+                {
+                    Console.WriteLine($"Registered user: {user.Username}");
+                }
+                else
+                {
+                    Console.WriteLine("Failed to register user: request body is invalid.");
+                }
+
+                // Serialize JSON response
+                responseBody = JsonSerializer.Serialize(new { message = "User registered", user });
+                /*
+                {
+                    "message": "User registered",
+                    "user": {
+                        "Username": "Ahmet",
+                        "Password": "123"
+                    }
+                }
+                */
+                // use new because message is new
+            }
+            else
+            {
+                responseBody = "<html><body>404 Not Found</body></html>";
+            }
+
+
             // Send a basic response
             writer.WriteLine("HTTP/1.1 200 OK");
-            writer.WriteLine("Content-Type: text/plain");
+            //writer.WriteLine("Content-Type: text/plain");
             writer.WriteLine(); // End of headers
-            writer.WriteLine("Hello, World!");
+            writer.WriteLine(responseBody);
         }
     }
 }
