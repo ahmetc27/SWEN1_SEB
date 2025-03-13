@@ -26,7 +26,7 @@ namespace SEB.Server
             {
                 // Wait for a client to connect
                 var client = _listener.AcceptTcpClient();
-                //Console.WriteLine("New connection received!");
+                Console.WriteLine("New connection received!");
 
                 // Handle the request
                 HandleRequest(client);
@@ -61,13 +61,13 @@ namespace SEB.Server
             string? line;
             while((line = reader.ReadLine()) != null)
             {
-                if(line.Length == 0) break; // // emtpy line indicates the end of the HTTP-headers
+                if(line.Length == 0) break; // emtpy line indicates the end of the HTTP-headers
 
                 // Parse the header
                 var headerParts = line.Split(':');
                 var headerName = headerParts[0];
                 var headerValue = headerParts[1].Trim();
-                //Console.WriteLine($"{headerName}: {headerValue}");
+                Console.WriteLine($"Header: {headerName}: {headerValue}");
 
                 if(headerName == "Content-Length")
                 {
@@ -90,7 +90,10 @@ namespace SEB.Server
                 }
             }
 
-            Console.WriteLine($"Body: {requestBody.ToString()}");
+            if(requestBody.Length > 0) // if body is not null
+            {
+                Console.WriteLine($"Body: {requestBody.ToString()}");
+            }
 
             // Handle different paths and methods
             string responseBody;
@@ -100,31 +103,38 @@ namespace SEB.Server
             }
             else if(path == "/users" && method == "POST")
             {
-                // Deserialize JSON request body
-                var user = JsonSerializer.Deserialize<User>(requestBody.ToString());//User user = new User
+                User? user = null;
+
+                try
+                {
+                    user = JsonSerializer.Deserialize<User>(requestBody.ToString());
+                }
+                catch(JsonException ex)
+                {
+                    Console.WriteLine($"JSON Deserialization Error: {ex.Message}");
+                }
 
                 if(user != null)
                 {
                     Console.WriteLine($"Registered user: {user.Username}");
                     _users.Add(user);
+                    responseBody = JsonSerializer.Serialize(new { message = "User registered", user });
                 }
                 else
                 {
                     Console.WriteLine("Failed to register user: request body is invalid.");
+                    responseBody = JsonSerializer.Serialize(new { message = "Invalid request body" });
                 }
 
-                // Serialize JSON response
-                responseBody = JsonSerializer.Serialize(new { message = "User registered", user });
             }
             else
             {
-                responseBody = "<html><body>404 Not Found</body></html>";
+                responseBody = "404 Not Found";
             }
-
 
             // Send a basic response
             writer.WriteLine("HTTP/1.1 200 OK");
-            //writer.WriteLine("Content-Type: text/plain");
+            writer.WriteLine(path == "/users" ? "Content-Type: application/json" : "Content-Type: text/plain");
             writer.WriteLine(); // End of headers
             writer.WriteLine(responseBody);
         }
