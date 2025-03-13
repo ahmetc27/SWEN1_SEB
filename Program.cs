@@ -7,5 +7,5 @@ using SEB.Server;
 // Output: User: Ahmet, ELO: 1500
 
 // Create and start the server
-var server = new Server(port: 8000);
+var server = new Server(port: 10001);
 server.Start();
