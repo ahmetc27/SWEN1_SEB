@@ -11,6 +11,7 @@ namespace SEB.Server
     public class Server
     {
         private readonly TcpListener _listener;
+        private List<User> _users = new List<User>();
         public Server(int port)
         {
             _listener = new TcpListener(IPAddress.Any, port);
@@ -25,7 +26,7 @@ namespace SEB.Server
             {
                 // Wait for a client to connect
                 var client = _listener.AcceptTcpClient();
-                Console.WriteLine("New connection received!");
+                //Console.WriteLine("New connection received!");
 
                 // Handle the request
                 HandleRequest(client);
@@ -66,7 +67,7 @@ namespace SEB.Server
                 var headerParts = line.Split(':');
                 var headerName = headerParts[0];
                 var headerValue = headerParts[1].Trim();
-                Console.WriteLine($"{headerName}: {headerValue}");
+                //Console.WriteLine($"{headerName}: {headerValue}");
 
                 if(headerName == "Content-Length")
                 {
@@ -95,19 +96,17 @@ namespace SEB.Server
             string responseBody;
             if(path == "/users" && method == "GET")
             {
-                responseBody = "<html><body>TEST GET!</body></html>";
+                responseBody = JsonSerializer.Serialize(_users);
             }
             else if(path == "/users" && method == "POST")
             {
                 // Deserialize JSON request body
-                var user = JsonSerializer.Deserialize<User>(requestBody.ToString());
-                /*
-                JsonSerializer.Deserialize<User>(requestBody.ToString()) wandelt in folgendes Objekt um:
-                User user = new User { Username = "Ahmet", Password = "123" };
-                */
+                var user = JsonSerializer.Deserialize<User>(requestBody.ToString());//User user = new User
+
                 if(user != null)
                 {
                     Console.WriteLine($"Registered user: {user.Username}");
+                    _users.Add(user);
                 }
                 else
                 {
@@ -116,16 +115,6 @@ namespace SEB.Server
 
                 // Serialize JSON response
                 responseBody = JsonSerializer.Serialize(new { message = "User registered", user });
-                /*
-                {
-                    "message": "User registered",
-                    "user": {
-                        "Username": "Ahmet",
-                        "Password": "123"
-                    }
-                }
-                */
-                // use new because message is new
             }
             else
             {
