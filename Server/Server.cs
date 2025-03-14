@@ -129,15 +129,16 @@ namespace SEB.Server
                     return;
                 }
             }
-            else if(path == "/users" && method == "DELETE")
+            else if(path.StartsWith("/users/") && method == "DELETE")
             {
                 string[] _parts = path.Split('/');
                 if(_parts.Length == 3 && int.TryParse(_parts[2], out int Userid))
                 {
                     _userRepo.Delete(Userid);
                     writer.WriteLine("HTTP/1.1 200 OK");
+                    writer.WriteLine("Content-Type: text/plain");
                     writer.WriteLine();
-                    writer.WriteLine($"User {Username} deleted.");
+                    writer.WriteLine($"User {Userid} deleted.");
                 }
                 else
                 {

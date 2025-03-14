@@ -17,27 +17,25 @@ namespace SEB.Repository
 
         public void Add(User user)
         {
-            using IDbConnection connection = new NpgsqlConnection(_connectionString);
-            using IDbCommand command = connection.CreateCommand();
+            using IDbConnection connection = new NpgsqlConnection(_connectionString); // create connection to postgresql database
+            using IDbCommand command = connection.CreateCommand(); // create sql command
             connection.Open();
 
             command.CommandText = "INSERT INTO Users (Username, Password) " +
-            "VALUES (@Username, @Password) RETURNING UserId";
-            AddParameterWithValue(command, "Username", DbType.String, user.Username);
+            "VALUES (@Username, @Password) RETURNING UserId"; // Sets the SQL command to insert a user and return the UserId
+            AddParameterWithValue(command, "Username", DbType.String, user.Username); // Adds a parameter for Username with type String.
             AddParameterWithValue(command, "Password", DbType.String, user.Password);
             user.Id = (int)(command.ExecuteScalar() ?? 0);
         }
 
         public void Delete(int userId)
         {   
-            if(user.Id == null)
-                throw new ArgumentException("Id must not be null");
-
             using IDbConnection connection = new NpgsqlConnection(_connectionString);
             using IDbCommand command = connection.CreateCommand();
             connection.Open();
+            
             command.CommandText = "DELETE FROM Users WHERE Userid=@Userid";
-            AddParameterWithValue(command, "Userid", DbType.Int32, user.Id);
+            AddParameterWithValue(command, "Userid", DbType.Int32, userId);
             command.ExecuteNonQuery();
         }
 
