@@ -1,3 +1,6 @@
+// Repositories: Data Persistence Layer
+// responsible for creating, updating, and deleting data
+
 using Npgsql;
 using System;
 using System.Data;

@@ -44,23 +44,22 @@ namespace SEB.Server
                 {
                     contentLength = int.Parse(headerValue);
                 }
-
-                StringBuilder requestBody = new StringBuilder();
-                if(contentLength > 0)
-                {
-                    char[] chars = new char[1024]; // Create buffer
-                    int bytesReadTotal = 0;
-                    while(bytesReadTotal < contentLength)
-                    {
-                        var bytesRead = reader.Read(chars, 0, chars.Length);
-                        bytesReadTotal += bytesRead;
-                        if(bytesRead == 0) { break; } // no more data available
-                        requestBody.Append(chars, 0, bytesRead);
-                    }
-                }
-                Body = requestBody.ToString();
-
             }
+        
+            StringBuilder requestBody = new StringBuilder();
+            if(contentLength > 0)
+            {
+                char[] chars = new char[1024]; // Create buffer
+                int bytesReadTotal = 0;
+                while(bytesReadTotal < contentLength)
+                {
+                    var bytesRead = reader.Read(chars, 0, chars.Length);
+                    bytesReadTotal += bytesRead;
+                    if(bytesRead == 0) { break; } // no more data available
+                    requestBody.Append(chars, 0, bytesRead);
+                }
+            }
+            Body = requestBody.ToString();
         }
     }
 }
